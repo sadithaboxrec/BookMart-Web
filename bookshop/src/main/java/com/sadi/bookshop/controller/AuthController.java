@@ -4,6 +4,7 @@ import com.sadi.bookshop.dto.LoginRequest;
 import com.sadi.bookshop.entity.User;
 import com.sadi.bookshop.exception.BadCredentialsException;
 import com.sadi.bookshop.security.CookieService;
+import com.sadi.bookshop.security.CustomUserDetails;
 import com.sadi.bookshop.security.JwtService;
 import com.sadi.bookshop.services.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,10 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -73,4 +77,34 @@ public class AuthController {
         cookieService.clearJwtCookie(response);
         return ResponseEntity.ok("Logged out");
     }
+
+
+    @GetMapping("/is-auth")
+    public ResponseEntity<?> isAuthenticated(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", false);
+            body.put("message", "Not authorized");
+            return ResponseEntity.status(401).body(body);
+        }
+
+        Map<String, Object> body = new HashMap<>();
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails user) {
+            body.put("email", user.getUsername());
+            body.put("name", user.getName());
+            body.put("role", user.getRole());
+        }
+
+        body.put("success", true);
+        return ResponseEntity.ok(body);
+    }
+
+
+
+
+
 }

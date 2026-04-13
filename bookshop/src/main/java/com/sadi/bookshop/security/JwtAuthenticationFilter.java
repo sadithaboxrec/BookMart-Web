@@ -21,6 +21,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CookieService cookieService;
 
+    private final CustomUserDetailsService customUserDetailsService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -32,12 +34,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtService.extractEmail(token);
                 String role  = jwtService.extractRole(token);   // "USER" or "SELLER"
 
+//                var auth = new UsernamePasswordAuthenticationToken(
+//                        email,
+//                        null,
+//                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+//                );
+//                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                var userDetails = customUserDetailsService.loadUserByUsername(email);
+
                 var auth = new UsernamePasswordAuthenticationToken(
-                        email,
+                        userDetails,
                         null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        userDetails.getAuthorities()
                 );
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
+
+
             }
         });
 
