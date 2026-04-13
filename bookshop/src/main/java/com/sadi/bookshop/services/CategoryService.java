@@ -19,4 +19,6 @@ public interface CategoryService{
 
     CategoryResponse findCategoryById(String id);
 
+    void updateCategoryStatus(String categoryId);
+
 }

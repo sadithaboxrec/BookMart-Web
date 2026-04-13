@@ -37,6 +37,8 @@ public class SecurityConfig {
 //                        .requestMatchers("/admin/**").hasRole("SELLER")
                         .requestMatchers("/admin/categories/**").hasRole("SELLER")
 //                        .requestMatchers("/admin/products/**").hasRole("SELLER")
+                                .requestMatchers("/admin/products/**").hasRole("SELLER")
+                                .requestMatchers("/products/**").permitAll()
                         // Authenticated users (both roles)
                         .requestMatchers("/cart/**", "/orders/**" , "/is-auth").hasAnyRole("USER", "SELLER")
                         // Everything else needs authentication

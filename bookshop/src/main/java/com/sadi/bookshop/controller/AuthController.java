@@ -42,7 +42,14 @@ public class AuthController {
                         .body(Map.of("message", "Account not activated. Please check your email."));
             }
 
+
+
             User user = userService.validateAndGetUser(request.getEmail(), request.getPassword());
+
+            System.out.println(user.getEmail());
+            System.out.println(user.getRole());
+            System.out.println(user.getIsActive());
+
 
             String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
             cookieService.addJwtCookie(response, token);

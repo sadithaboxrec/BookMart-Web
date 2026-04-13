@@ -72,20 +72,36 @@ public class UserServiceImpl implements UserService {
 
 
 
+//    public User validateAndGetUser(String email, String password) {
+//
+//        // 1. Let Spring Security validate credentials (throws AuthenticationException on failure)
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(email, password)
+//        );
+//
+//        // 2. Account activation check
+//        User user = userRepo.findByEmail(email)
+//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+//
+//        if (!Boolean.TRUE.equals(user.getIsActive())) {
+//            throw new DisabledException("Account is not activated. Please check your email.");
+//        }
+//
+//        return user;
+//    }
+
     public User validateAndGetUser(String email, String password) {
 
-        // 1. Let Spring Security validate credentials (throws AuthenticationException on failure)
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-        );
-
-        // 2. Account activation check
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new DisabledException("Account is not activated. Please check your email.");
+            throw new DisabledException("Account is not activated");
         }
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+        );
 
         return user;
     }
