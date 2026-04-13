@@ -17,20 +17,47 @@ public class UserController
 
     private final UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerProfile(
-         @Valid @RequestBody UserRequest userRequest) {
+//    @PostMapping("/register")
+//    public ResponseEntity<?> registerProfile(
+//         @Valid @RequestBody UserRequest userRequest) {
+//
+//        if(userService.hasCustomerWithEmail(userRequest.getEmail())){
+////            return new ResponseEntity<>("Customer Already exists with that email" , HttpStatus.NOT_ACCEPTABLE);
+//            throw new DuplicateResourceException("Email address already in use");
+//        }
+//
+//        UserResponse response = userService.register(userRequest);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//
+//    }
 
-        if(userService.hasCustomerWithEmail(userRequest.getEmail())){
-//            return new ResponseEntity<>("Customer Already exists with that email" , HttpStatus.NOT_ACCEPTABLE);
+
+    // Public — always creates Role.USER
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRequest request) {
+
+        if (userService.hasCustomerWithEmail(request.getEmail())) {
             throw new DuplicateResourceException("Email address already in use");
         }
 
-        UserResponse response = userService.register(userRequest);
-
+        UserResponse response = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
     }
+
+    // Protected — only existing SELLER can access (enforced by SecurityConfig)
+    @PostMapping("/admin/register-seller")
+    public ResponseEntity<?> registerSeller(@Valid @RequestBody UserRequest request) {
+
+        if (userService.hasCustomerWithEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email address already in use");
+        }
+
+        UserResponse response = userService.registerSeller(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+
 
     @GetMapping("/activateProfile")
     public ResponseEntity<String> activateProfile(@RequestParam String token) {

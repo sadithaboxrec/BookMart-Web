@@ -3,6 +3,7 @@ package com.sadi.bookshop.entity;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import com.sadi.bookshop.enums.Role;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -30,6 +31,8 @@ public class User {
 
     private Boolean isActive=false;
     private String activationToken;
+
+    private Role role = Role.USER;
 
 //    @CreationTimeStamp
     @CreatedDate
