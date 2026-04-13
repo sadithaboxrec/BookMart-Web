@@ -16,6 +16,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());  //409
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<String> handleBadCredentials(BadCredentialsException ex) {

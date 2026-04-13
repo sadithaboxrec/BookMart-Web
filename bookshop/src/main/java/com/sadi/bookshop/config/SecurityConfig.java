@@ -34,9 +34,11 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/register", "/login", "/activateProfile").permitAll()
                         // Seller-only (admin dashboard)
-                        .requestMatchers("/admin/**").hasRole("SELLER")
+//                        .requestMatchers("/admin/**").hasRole("SELLER")
+                        .requestMatchers("/admin/categories/**").hasRole("SELLER")
+//                        .requestMatchers("/admin/products/**").hasRole("SELLER")
                         // Authenticated users (both roles)
-                        .requestMatchers("/cart/**", "/orders/**").hasAnyRole("USER", "SELLER")
+                        .requestMatchers("/cart/**", "/orders/**" , "/is-auth").hasAnyRole("USER", "SELLER")
                         // Everything else needs authentication
                         .anyRequest().authenticated()
                 )
