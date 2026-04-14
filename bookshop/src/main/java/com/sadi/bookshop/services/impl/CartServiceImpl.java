@@ -22,17 +22,59 @@ public class CartServiceImpl implements CartService {
     private final CartRepo cartRepo;
     private final ProductRepo productRepo;
 
-    @Override
-    public CartResponse addToCart(String cartId, AddToCartRequest request) {
+//    @Override
+//    public CartResponse addToCart(String cartId, AddToCartRequest request) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseGet(() -> {
+//                    Cart newCart = new Cart();
+//                    newCart.setId(cartId);
+//                    newCart.setCreatedAt(LocalDateTime.now());
+//                    newCart.setItems(new ArrayList<>());
+//                    return newCart;
+//                });
+//
+//        Product product = productRepo.findById(request.getProductId())
+//                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+//
+//        Optional<CartItem> existingItem = cart.getItems()
+//                .stream()
+//                .filter(i -> i.getProductId().equals(request.getProductId()))
+//                .findFirst();
+//
+//        if (existingItem.isPresent()) {
+//            existingItem.get().setQuantity(
+//                    existingItem.get().getQuantity() + request.getQuantity()
+//            );
+//        } else {
+//            CartItem item = CartItem.builder()
+//                    .productId(product.getId())
+//                    .name(product.getName())
+//                    .price(product.getOfferPrice() != null ? product.getOfferPrice() : product.getPrice())
+//                    .image(product.getImages() != null && !product.getImages().isEmpty()
+//                            ? product.getImages().get(0)
+//                            : null)
+//                    .quantity(request.getQuantity())
+//                    .build();
+//
+//            cart.getItems().add(item);
+//        }
+//
+//        cart.setUpdatedAt(LocalDateTime.now());
+//
+//        Cart saved = cartRepo.save(cart);
+//
+//        return mapToResponse(saved);
+//    }
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseGet(() -> {
-                    Cart newCart = new Cart();
-                    newCart.setId(cartId);
-                    newCart.setCreatedAt(LocalDateTime.now());
-                    newCart.setItems(new ArrayList<>());
-                    return newCart;
-                });
+
+
+
+
+    // addto cart after login and merging cart
+    public CartResponse addToCart(String cartId, String userId, AddToCartRequest request) {
+
+        Cart cart = getCartEntity(cartId, userId);
 
         Product product = productRepo.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -47,7 +89,7 @@ public class CartServiceImpl implements CartService {
                     existingItem.get().getQuantity() + request.getQuantity()
             );
         } else {
-            CartItem item = CartItem.builder()
+            cart.getItems().add(CartItem.builder()
                     .productId(product.getId())
                     .name(product.getName())
                     .price(product.getOfferPrice() != null ? product.getOfferPrice() : product.getPrice())
@@ -55,28 +97,62 @@ public class CartServiceImpl implements CartService {
                             ? product.getImages().get(0)
                             : null)
                     .quantity(request.getQuantity())
-                    .build();
-
-            cart.getItems().add(item);
+                    .build());
         }
 
         cart.setUpdatedAt(LocalDateTime.now());
-
-        Cart saved = cartRepo.save(cart);
-
-        return mapToResponse(saved);
+        return mapToResponse(cartRepo.save(cart));
     }
 
-    @Override
-    public CartResponse getCart(String cartId) {
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseGet(() -> {
-                    Cart newCart = new Cart();
-                    newCart.setId(cartId);
-                    newCart.setItems(new ArrayList<>());
-                    return cartRepo.save(newCart);
-                });
+
+
+
+//    @Override
+//    public CartResponse getCart(String cartId) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseGet(() -> {
+//                    Cart newCart = new Cart();
+//                    newCart.setId(cartId);
+//                    newCart.setItems(new ArrayList<>());
+//                    return cartRepo.save(newCart);
+//                });
+//
+//        return mapToResponse(cart);
+//    }
+
+
+
+    @Override
+    public CartResponse getCart(String cartId, String userId) {
+
+        Cart cart;
+
+        //  Logged-in user
+        if (userId != null) {
+
+            cart = cartRepo.findByUserId(userId)
+                    .orElseGet(() -> {
+                        Cart newCart = new Cart();
+                        newCart.setUserId(userId);
+                        newCart.setItems(new ArrayList<>());
+                        newCart.setCreatedAt(LocalDateTime.now());
+                        return cartRepo.save(newCart);
+                    });
+
+        } else {
+
+            // Guest user
+            cart = cartRepo.findById(cartId)
+                    .orElseGet(() -> {
+                        Cart newCart = new Cart();
+                        newCart.setId(cartId);
+                        newCart.setItems(new ArrayList<>());
+                        newCart.setCreatedAt(LocalDateTime.now());
+                        return cartRepo.save(newCart);
+                    });
+        }
 
         return mapToResponse(cart);
     }
@@ -84,12 +160,28 @@ public class CartServiceImpl implements CartService {
 
 
 
+
     // increse cart quantity
 
-    public CartResponse increaseQty(String cartId, String productId) {
+//    public CartResponse increaseQty(String cartId, String productId) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+//
+//        for (CartItem item : cart.getItems()) {
+//            if (item.getProductId().equals(productId)) {
+//                item.setQuantity(item.getQuantity() + 1);
+//                break;
+//            }
+//        }
+//
+//        cart.setUpdatedAt(LocalDateTime.now());
+//        return mapToResponse(cartRepo.save(cart));
+//    }
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+    public CartResponse increaseQty(String cartId, String userId, String productId) {
+
+        Cart cart = getCartEntity(cartId, userId);
 
         for (CartItem item : cart.getItems()) {
             if (item.getProductId().equals(productId)) {
@@ -104,10 +196,38 @@ public class CartServiceImpl implements CartService {
 
 // decrease the quantity
 
-    public CartResponse decreaseQty(String cartId, String productId) {
+//    public CartResponse decreaseQty(String cartId, String productId) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+//
+//        List<CartItem> items = cart.getItems();
+//
+//        for (int i = 0; i < items.size(); i++) {
+//
+//            CartItem item = items.get(i);
+//
+//            if (item.getProductId().equals(productId)) {
+//
+//                if (item.getQuantity() > 1) {
+//                    item.setQuantity(item.getQuantity() - 1);
+//                } else {
+//                    items.remove(i);
+//                }
+//                break;
+//            }
+//        }
+//
+//        cart.setUpdatedAt(LocalDateTime.now());
+//        return mapToResponse(cartRepo.save(cart));
+//    }
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+
+
+    @Override
+    public CartResponse decreaseQty(String cartId, String userId, String productId) {
+
+        Cart cart = getCartEntity(cartId, userId);
 
         List<CartItem> items = cart.getItems();
 
@@ -133,40 +253,140 @@ public class CartServiceImpl implements CartService {
 
 // remove a product from item
 
+//    @Override
+//    public CartResponse removeFromCart(String cartId, String productId) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+//
+//        List<CartItem> items = cart.getItems();
+//
+//        if (items != null) {
+//            items.removeIf(item -> item.getProductId().equals(productId));
+//        }
+//
+//        cart.setUpdatedAt(LocalDateTime.now());
+//
+//        Cart saved = cartRepo.save(cart);
+//
+//        return mapToResponse(saved);
+//    }
+
+
+
     @Override
-    public CartResponse removeFromCart(String cartId, String productId) {
+    public CartResponse removeFromCart(String cartId, String userId, String productId) {
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        Cart cart = getCartEntity(cartId, userId);
 
-        List<CartItem> items = cart.getItems();
-
-        if (items != null) {
-            items.removeIf(item -> item.getProductId().equals(productId));
-        }
+        cart.getItems().removeIf(i -> i.getProductId().equals(productId));
 
         cart.setUpdatedAt(LocalDateTime.now());
-
-        Cart saved = cartRepo.save(cart);
-
-        return mapToResponse(saved);
+        return mapToResponse(cartRepo.save(cart));
     }
-
 
 
     // clear entire cart
 
-    public CartResponse clearCart(String cartId) {
+//    public CartResponse clearCart(String cartId) {
+//
+//        Cart cart = cartRepo.findById(cartId)
+//                .orElseThrow(() -> new RuntimeException("Cart not found"));
+//
+//        cart.getItems().clear();
+//        cart.setUpdatedAt(LocalDateTime.now());
+//
+//        return mapToResponse(cartRepo.save(cart));
+//    }
 
-        Cart cart = cartRepo.findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+    @Override
+    public CartResponse clearCart(String cartId, String userId) {
+
+        Cart cart = getCartEntity(cartId, userId);
 
         cart.getItems().clear();
-        cart.setUpdatedAt(LocalDateTime.now());
 
+        cart.setUpdatedAt(LocalDateTime.now());
         return mapToResponse(cartRepo.save(cart));
     }
 
+
+
+
+// merge the session after user login
+
+    public void mergeCart(String guestCartId, String userId) {
+
+        if (guestCartId == null) return;
+
+        Cart guestCart = cartRepo.findById(guestCartId).orElse(null);
+
+        if (guestCart == null || guestCart.getItems().isEmpty()) return;
+
+        Cart userCart = cartRepo.findByUserId(userId)
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setUserId(userId);
+                    newCart.setItems(new ArrayList<>());
+                    newCart.setCreatedAt(LocalDateTime.now());
+                    return newCart;
+                });
+
+        for (CartItem guestItem : guestCart.getItems()) {
+
+            Optional<CartItem> existingItem = userCart.getItems().stream()
+                    .filter(i -> i.getProductId().equals(guestItem.getProductId()))
+                    .findFirst();
+
+            if (existingItem.isPresent()) {
+                existingItem.get().setQuantity(
+                        existingItem.get().getQuantity() + guestItem.getQuantity()
+                );
+            } else {
+                userCart.getItems().add(guestItem);
+            }
+        }
+
+        userCart.setUpdatedAt(LocalDateTime.now());
+
+        cartRepo.save(userCart);
+
+        //  delete guest cart after merge
+        cartRepo.delete(guestCart);
+    }
+
+
+
+
+
+
+
+
+    // to convert cartto userId
+
+
+    private Cart getCartEntity(String cartId, String userId) {
+
+        if (userId != null) {
+            return cartRepo.findByUserId(userId)
+                    .orElseGet(() -> {
+                        Cart newCart = new Cart();
+                        newCart.setUserId(userId);
+                        newCart.setItems(new ArrayList<>());
+                        newCart.setCreatedAt(LocalDateTime.now());
+                        return cartRepo.save(newCart);
+                    });
+        }
+
+        return cartRepo.findById(cartId)
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setId(cartId);
+                    newCart.setItems(new ArrayList<>());
+                    newCart.setCreatedAt(LocalDateTime.now());
+                    return cartRepo.save(newCart);
+                });
+    }
 
     private CartResponse mapToResponse(Cart cart) {
 

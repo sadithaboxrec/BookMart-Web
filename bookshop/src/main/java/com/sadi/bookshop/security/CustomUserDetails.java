@@ -11,12 +11,14 @@ import java.util.List;
 @Data
 public class CustomUserDetails implements UserDetails {
 
+    private String id;   // for bug fix in cart and cart merge
     private String email;
     private String name;
     private String role;
     private String password;
 
-    public CustomUserDetails(String email, String name, String role, String password) {
+    public CustomUserDetails(String id,String email, String name, String role, String password) {
+        this.id = id;
         this.email = email;
         this.name = name;
         this.role = role;

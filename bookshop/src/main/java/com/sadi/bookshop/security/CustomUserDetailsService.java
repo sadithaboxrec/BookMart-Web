@@ -22,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new CustomUserDetails(
+                user.getId(),// bug fix happen in cart and cart merge
                 user.getEmail(),
                 user.getName(),
                 user.getRole().name(),

@@ -6,7 +6,10 @@ import com.sadi.bookshop.exception.BadCredentialsException;
 import com.sadi.bookshop.security.CookieService;
 import com.sadi.bookshop.security.CustomUserDetails;
 import com.sadi.bookshop.security.JwtService;
+import com.sadi.bookshop.services.CartService;
 import com.sadi.bookshop.services.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +33,14 @@ public class AuthController {
     private final JwtService jwtService;
     private final CookieService cookieService;
 
+    private final CartService cartService;   // to get cookie of cart
+
+
+    // need to add HttpServletRequest for login for cookie
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response) {
 
         try {
@@ -45,6 +53,12 @@ public class AuthController {
 
 
             User user = userService.validateAndGetUser(request.getEmail(), request.getPassword());
+
+            //  GET guest cartId
+            String guestCartId = extractCartId(httpRequest);
+
+             //  MERGE CART
+            cartService.mergeCart(guestCartId, user.getId());
 
             System.out.println(user.getEmail());
             System.out.println(user.getRole());
@@ -112,6 +126,20 @@ public class AuthController {
 
 
 
+// extracting the cookie
+
+    private String extractCartId(HttpServletRequest request) {
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("cartId")) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
+    }
 
 
 }

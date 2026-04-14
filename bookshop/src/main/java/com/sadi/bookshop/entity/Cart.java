@@ -19,6 +19,8 @@ public class Cart {
     @Id
     private String id; // cartId (stored in cookie)
 
+    private String userId; // to merge logged user
+
     private List<CartItem> items = new ArrayList<>();
 
     private LocalDateTime createdAt;
