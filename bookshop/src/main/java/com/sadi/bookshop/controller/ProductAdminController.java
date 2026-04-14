@@ -2,6 +2,7 @@ package com.sadi.bookshop.controller;
 
 import com.sadi.bookshop.dto.ProductRequest;
 import com.sadi.bookshop.dto.ProductResponse;
+import com.sadi.bookshop.dto.ProductUpdateRequest;
 import com.sadi.bookshop.services.ImageUploadService;
 import com.sadi.bookshop.services.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +37,36 @@ public class ProductAdminController {
         );
     }
 
-    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<ProductResponse> update(
+//    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+//    public ResponseEntity<ProductResponse> update(
+//            @PathVariable String id,
+//            @RequestPart("request") String request,
+//            @RequestPart(value = "images", required = false) List<MultipartFile> images
+//    ) throws Exception {
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        ProductRequest productRequest =
+//                mapper.readValue(request, ProductRequest.class);
+//
+//        List<String> urls = (images != null)
+//                ? imageUploadService.uploadImages(images)
+//                : null;
+//
+//        return ResponseEntity.ok(
+//                productService.updateProduct(id, productRequest, urls)
+//        );
+//    }
+
+    @PatchMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable String id,
             @RequestPart("request") String request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images
     ) throws Exception {
 
         ObjectMapper mapper = new ObjectMapper();
-        ProductRequest productRequest =
-                mapper.readValue(request, ProductRequest.class);
+        ProductUpdateRequest productRequest =
+                mapper.readValue(request, ProductUpdateRequest.class);
 
         List<String> urls = (images != null)
                 ? imageUploadService.uploadImages(images)
@@ -55,4 +76,5 @@ public class ProductAdminController {
                 productService.updateProduct(id, productRequest, urls)
         );
     }
+
 }

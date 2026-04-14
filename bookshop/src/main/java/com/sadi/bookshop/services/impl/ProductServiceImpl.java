@@ -2,8 +2,10 @@ package com.sadi.bookshop.services.impl;
 
 import com.sadi.bookshop.dto.ProductRequest;
 import com.sadi.bookshop.dto.ProductResponse;
+import com.sadi.bookshop.dto.ProductUpdateRequest;
 import com.sadi.bookshop.entity.Category;
 import com.sadi.bookshop.entity.Product;
+import com.sadi.bookshop.exception.ResourceNotFoundException;
 import com.sadi.bookshop.repo.CategoryRepo;
 import com.sadi.bookshop.repo.ProductRepo;
 import com.sadi.bookshop.services.ProductService;
@@ -19,6 +21,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
+
+    private final CloudinaryImageService imageUploadService;
 
     @Override
     public ProductResponse createProduct(ProductRequest request, List<String> imageUrls) {
@@ -42,24 +46,100 @@ public class ProductServiceImpl implements ProductService {
         return mapToResponse(saved);
     }
 
+//    @Override
+//    public ProductResponse updateProduct(String id, ProductRequest request, List<String> imageUrls) {
+//
+//        Product product = productRepo.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Product not found"));
+//
+//        product.setName(request.getName());
+//        product.setDescription(request.getDescription());
+//        product.setPrice(request.getPrice());
+//        product.setOfferPrice(request.getOfferPrice());
+//        product.setCategoryId(request.getCategoryId());
+//        product.setQuantity(request.getQuantity());
+//
+//        if (imageUrls != null && !imageUrls.isEmpty()) {
+//            product.setImages(imageUrls);
+//        }
+//
+//        product.setActive(request.getQuantity() > 0);
+//        product.setUpdatedAt(LocalDateTime.now());
+//
+//        Product saved = productRepo.save(product);
+//
+//        updateCategoryStatus(product.getCategoryId());
+//
+//        return mapToResponse(saved);
+//    }
+
     @Override
-    public ProductResponse updateProduct(String id, ProductRequest request, List<String> imageUrls) {
+    public ProductResponse updateProduct(String id, ProductUpdateRequest request, List<String> imageUrls) {
 
         Product product = productRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setOfferPrice(request.getOfferPrice());
-        product.setCategoryId(request.getCategoryId());
-        product.setQuantity(request.getQuantity());
-
-        if (imageUrls != null && !imageUrls.isEmpty()) {
-            product.setImages(imageUrls);
+        if (request.getName() != null) {
+            product.setName(request.getName());
         }
 
-        product.setActive(request.getQuantity() > 0);
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+
+        if (request.getPrice() != null) {
+            product.setPrice(request.getPrice());
+        }
+
+        if (request.getOfferPrice() != null) {
+            product.setOfferPrice(request.getOfferPrice());
+        }
+
+        if (request.getCategoryId() != null) {
+            product.setCategoryId(request.getCategoryId());
+        }
+
+        if (request.getQuantity() != null) {
+            product.setQuantity(request.getQuantity());
+            product.setActive(request.getQuantity() > 0);
+        }
+
+        //  Remove images (Cloudinary first, then DB)
+        if (request.getRemoveImages() != null && !request.getRemoveImages().isEmpty()) {
+
+            List<String> existingImages = product.getImages();
+
+            if (existingImages != null) {
+
+                for (String imageUrl : request.getRemoveImages()) {
+
+                    if (existingImages.contains(imageUrl)) {
+
+                        try {
+                            // Delete from Cloudinary FIRST
+                            imageUploadService.deleteImage(imageUrl);
+
+                            // 2. Then remove from DB list
+                            existingImages.remove(imageUrl);
+
+                        } catch (Exception e) {
+                            // Important: don't silently ignore
+                            throw new RuntimeException("Failed to delete image: " + imageUrl);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            List<String> existingImages = product.getImages();
+            if (existingImages != null) {
+                existingImages.addAll(imageUrls);
+            } else {
+                product.setImages(imageUrls);
+            }
+        }
+
         product.setUpdatedAt(LocalDateTime.now());
 
         Product saved = productRepo.save(product);
@@ -68,6 +148,8 @@ public class ProductServiceImpl implements ProductService {
 
         return mapToResponse(saved);
     }
+
+
 
     @Override
     public ProductResponse getProductById(String id) {

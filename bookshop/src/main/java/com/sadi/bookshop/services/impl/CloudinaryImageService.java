@@ -39,5 +39,25 @@ public class CloudinaryImageService implements ImageUploadService {
         }).toList();
     }
 
+// remove image when need to update it
+
+    public void deleteImage(String imageUrl) {
+        try {
+            String publicId = extractPublicId(imageUrl);
+            cloudinary.uploader().destroy(publicId, Map.of());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete image from Cloudinary");
+        }
+    }
+
+
+    private String extractPublicId(String imageUrl) {
+        String[] parts = imageUrl.split("/");
+        String fileName = parts[parts.length - 1];
+
+        String publicIdWithFolder = parts[parts.length - 2] + "/" + fileName;
+
+        return publicIdWithFolder.substring(0, publicIdWithFolder.lastIndexOf("."));
+    }
 
 }

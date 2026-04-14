@@ -18,12 +18,12 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<ProductResponse> getAll() {
+    public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("/{id}")
-    public ProductResponse getById(@PathVariable String id) {
+    public ProductResponse getProductById(@PathVariable String id) {
         return productService.getProductById(id);
     }
 }
