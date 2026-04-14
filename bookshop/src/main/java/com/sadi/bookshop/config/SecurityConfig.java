@@ -42,8 +42,11 @@ public class SecurityConfig {
 
                         // so user can add without login
                                 .requestMatchers("/cart/**").permitAll()
-                        // Authenticated users (both roles)
-                        .requestMatchers("/orders/**" , "/is-auth").hasAnyRole("USER", "SELLER")
+
+                                .requestMatchers("/orders/**").hasAnyRole("USER", "SELLER")
+                                .requestMatchers("/orders/admin").hasRole("SELLER")
+                        .requestMatchers( "/is-auth").hasAnyRole("USER", "SELLER")
+
                         // Everything else needs authentication
                         .anyRequest().authenticated()
                 )
