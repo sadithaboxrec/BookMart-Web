@@ -34,5 +34,12 @@ public class Order {
 
     private OrderStatus status; // in enum
 
+
+    // for payment
+
+    private String razorpayOrderId;
+    private String razorpayPaymentId;
+
+
     private LocalDateTime createdAt;
 }
